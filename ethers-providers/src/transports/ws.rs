@@ -22,6 +22,7 @@ use std::{
     },
 };
 use thiserror::Error;
+use tracing::trace;
 
 use super::common::{Params, Response};
 
@@ -245,15 +246,11 @@ where
                     debug!("work complete");
                     break
                 }
-                match self.tick().await {
-                    Err(ClientError::UnexpectedClose) => {
-                        error!("{}", ClientError::UnexpectedClose);
-                        break
-                    }
-                    Err(e) => {
-                        panic!("WS Server panic: {}", e);
-                    }
-                    _ => {}
+
+                if let Err(e) = self.tick().await {
+                    error!("Received a WebSocket error: {:?}", e);
+                    self.close_all_subscriptions();
+                    break
                 }
             }
         };
@@ -263,6 +260,15 @@ where
 
         #[cfg(not(target_arch = "wasm32"))]
         tokio::spawn(f);
+    }
+
+    // This will close all active subscriptions. Each process listening for
+    // updates will observe the end of their subscription streams.
+    fn close_all_subscriptions(&self) {
+        error!("Tearing down subscriptions");
+        for (_, sub) in self.subscriptions.iter() {
+            sub.close_channel();
+        }
     }
 
     // dispatch an RPC request
@@ -317,6 +323,7 @@ where
     }
 
     async fn handle_text(&mut self, inner: String) -> Result<(), ClientError> {
+        trace!(msg=?inner, "received message");
         let (id, result) = match serde_json::from_str(&inner)? {
             Response::Success { id, result } => (id, Ok(result.to_owned())),
             Response::Error { id, error } => (id, Err(error)),
@@ -417,7 +424,7 @@ where
 
 // TrySendError is private :(
 fn to_client_error<T: Debug>(err: T) -> ClientError {
-    ClientError::ChannelError(format!("{:?}", err))
+    ClientError::ChannelError(format!("{err:?}"))
 }
 
 #[derive(Error, Debug)]

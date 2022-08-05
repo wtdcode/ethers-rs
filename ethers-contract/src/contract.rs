@@ -7,7 +7,7 @@ use crate::{
 
 use ethers_core::{
     abi::{Abi, Detokenize, Error, EventExt, Function, Tokenize},
-    types::{Address, Filter, NameOrAddress, Selector, ValueOrArray},
+    types::{Address, Filter, Selector, ValueOrArray},
 };
 
 #[cfg(not(feature = "legacy"))]
@@ -147,14 +147,21 @@ use std::{fmt::Debug, marker::PhantomData, sync::Arc};
 /// _Disclaimer: these above docs have been adapted from the corresponding [ethers.js page](https://docs.ethers.io/ethers.js/html/api-contract.html)_
 ///
 /// [`abigen`]: macro.abigen.html
-/// [`Abigen` builder]: crate::Abigen
+/// [`Abigen` builder]: struct.Abigen.html
 /// [`event`]: method@crate::Contract::event
 /// [`method`]: method@crate::Contract::method
 #[derive(Debug)]
 pub struct Contract<M> {
+    address: Address,
     base_contract: BaseContract,
     client: Arc<M>,
-    address: Address,
+}
+
+impl<M> std::ops::Deref for Contract<M> {
+    type Target = BaseContract;
+    fn deref(&self) -> &Self::Target {
+        &self.base_contract
+    }
 }
 
 impl<M> Clone for Contract<M> {
@@ -167,10 +174,44 @@ impl<M> Clone for Contract<M> {
     }
 }
 
+impl<M> Contract<M> {
+    /// Returns the contract's address
+    pub fn address(&self) -> Address {
+        self.address
+    }
+
+    /// Returns a reference to the contract's ABI
+    pub fn abi(&self) -> &Abi {
+        &self.base_contract.abi
+    }
+
+    /// Returns a pointer to the contract's client
+    pub fn client(&self) -> Arc<M> {
+        self.client.clone()
+    }
+}
+
+impl<M: Middleware> Contract<M> {
+    /// Returns an [`Event`](crate::builders::Event) builder for the provided event.
+    /// This function operates in a static context, then it does not require a `self`
+    /// to reference to instantiate an [`Event`](crate::builders::Event) builder.
+    pub fn event_of_type<D: EthEvent>(client: &Arc<M>) -> Event<M, D> {
+        Event {
+            provider: client,
+            filter: Filter::new().event(&D::abi_signature()),
+            datatype: PhantomData,
+        }
+    }
+}
+
 impl<M: Middleware> Contract<M> {
     /// Creates a new contract from the provided client, abi and address
-    pub fn new(address: Address, abi: impl Into<BaseContract>, client: impl Into<Arc<M>>) -> Self {
-        Self { base_contract: abi.into(), client: client.into(), address }
+    pub fn new(
+        address: impl Into<Address>,
+        abi: impl Into<BaseContract>,
+        client: impl Into<Arc<M>>,
+    ) -> Self {
+        Self { base_contract: abi.into(), client: client.into(), address: address.into() }
     }
 
     /// Returns an [`Event`](crate::builders::Event) builder for the provided event.
@@ -232,13 +273,13 @@ impl<M: Middleware> Contract<M> {
 
         #[cfg(feature = "legacy")]
         let tx = TransactionRequest {
-            to: Some(NameOrAddress::Address(self.address)),
+            to: Some(self.address.into()),
             data: Some(data),
             ..Default::default()
         };
         #[cfg(not(feature = "legacy"))]
         let tx = Eip1559TransactionRequest {
-            to: Some(NameOrAddress::Address(self.address)),
+            to: Some(self.address.into()),
             data: Some(data),
             ..Default::default()
         };
@@ -276,27 +317,5 @@ impl<M: Middleware> Contract<M> {
         N: Clone,
     {
         Contract { base_contract: self.base_contract.clone(), client, address: self.address }
-    }
-
-    /// Returns the contract's address
-    pub fn address(&self) -> Address {
-        self.address
-    }
-
-    /// Returns a reference to the contract's ABI
-    pub fn abi(&self) -> &Abi {
-        &self.base_contract.abi
-    }
-
-    /// Returns a reference to the contract's client
-    pub fn client(&self) -> &M {
-        &self.client
-    }
-}
-
-impl<M: Middleware> std::ops::Deref for Contract<M> {
-    type Target = BaseContract;
-    fn deref(&self) -> &Self::Target {
-        &self.base_contract
     }
 }
