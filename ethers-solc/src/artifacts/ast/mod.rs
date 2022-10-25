@@ -43,7 +43,7 @@ ast_node!(
 );
 
 node_group! {
-    SourceUnitPart;
+    SourceUnitPart; // base
 
     PragmaDirective,
     ImportDirective,
@@ -51,10 +51,10 @@ node_group! {
     VariableDeclaration,
     EnumDefinition,
     ErrorDefinition,
-    FunctionDefinition,
+    FunctionDefinition, // has body: Block, can loop over statements
     StructDefinition,
     UserDefinedValueTypeDefinition,
-    ContractDefinition,
+    ContractDefinition, // has nodes: ContractDefinitionPart
 }
 
 node_group! {
@@ -461,7 +461,7 @@ expr_node!(
 
 expr_node!(
     /// A `new` expression.
-    struct NewExpression {
+    struct New {
         type_name: TypeName,
     }
 );
