@@ -1,0 +1,174 @@
+{
+  "absolutePath": "address_yul.sol",
+  "exportedSymbols":
+  {
+    "Foo":
+    [
+      10
+    ]
+  },
+  "id": 11,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "id": 1,
+      "literals":
+      [
+        "solidity",
+        "^",
+        "0.8",
+        ".0"
+      ],
+      "nodeType": "PragmaDirective",
+      "src": "0:23:0"
+    },
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "fullyImplemented": true,
+      "id": 10,
+      "linearizedBaseContracts":
+      [
+        10
+      ],
+      "name": "Foo",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "body":
+          {
+            "id": 8,
+            "nodeType": "Block",
+            "src": "72:101:0",
+            "statements":
+            [
+              {
+                "assignments":
+                [
+                  5
+                ],
+                "declarations":
+                [
+                  {
+                    "constant": false,
+                    "id": 5,
+                    "mutability": "mutable",
+                    "name": "cont",
+                    "nodeType": "VariableDeclaration",
+                    "scope": 8,
+                    "src": "82:12:0",
+                    "stateVariable": false,
+                    "storageLocation": "default",
+                    "typeDescriptions":
+                    {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    },
+                    "typeName":
+                    {
+                      "id": 4,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "82:7:0",
+                      "stateMutability": "nonpayable",
+                      "typeDescriptions":
+                      {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "visibility": "internal"
+                  }
+                ],
+                "id": 6,
+                "nodeType": "VariableDeclarationStatement",
+                "src": "82:12:0"
+              },
+              {
+                "AST":
+                {
+                  "nodeType": "YulBlock",
+                  "src": "126:41:0",
+                  "statements":
+                  [
+                    {
+                      "nodeType": "YulAssignment",
+                      "src": "140:17:0",
+                      "value":
+                      {
+                        "arguments": [],
+                        "functionName":
+                        {
+                          "name": "address",
+                          "nodeType": "YulIdentifier",
+                          "src": "148:7:0"
+                        },
+                        "nodeType": "YulFunctionCall",
+                        "src": "148:9:0"
+                      },
+                      "variableNames":
+                      [
+                        {
+                          "name": "cont",
+                          "nodeType": "YulIdentifier",
+                          "src": "140:4:0"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "evmVersion": "istanbul",
+                "externalReferences":
+                [
+                  {
+                    "declaration": 5,
+                    "isOffset": false,
+                    "isSlot": false,
+                    "src": "140:4:0",
+                    "valueSize": 1
+                  }
+                ],
+                "id": 7,
+                "nodeType": "InlineAssembly",
+                "src": "117:50:0"
+              }
+            ]
+          },
+          "functionSelector": "c6dad082",
+          "id": 9,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "make",
+          "nodeType": "FunctionDefinition",
+          "parameters":
+          {
+            "id": 2,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "57:2:0"
+          },
+          "returnParameters":
+          {
+            "id": 3,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "72:0:0"
+          },
+          "scope": 10,
+          "src": "44:129:0",
+          "stateMutability": "view",
+          "virtual": false,
+          "visibility": "public"
+        }
+      ],
+      "scope": 11,
+      "src": "25:150:0"
+    }
+  ],
+  "src": "0:176:0"
+}
