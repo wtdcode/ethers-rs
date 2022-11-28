@@ -51,6 +51,7 @@ pub struct YulFunctionCall {
     #[serde(with = "serde_helpers::display_from_str")]
     pub src: SourceLocation,
     pub arguments: Vec<YulExpression>,
+    pub function_name: YulIdentifier,
 }
 
 /// A Yul identifier.
