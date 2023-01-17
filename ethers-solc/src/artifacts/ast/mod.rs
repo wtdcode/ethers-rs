@@ -16,6 +16,7 @@ mod misc;
 pub use misc::*;
 pub mod lowfidelity;
 pub mod util;
+pub mod visitor;
 
 /// Types for the Yul AST.
 ///
@@ -1069,6 +1070,8 @@ ast_node!(
 
 #[cfg(test)]
 mod tests {
+    use crate::artifacts::visitor::Visitable;
+
     use super::*;
     use std::{fs, path::PathBuf};
 
@@ -1088,7 +1091,8 @@ mod tests {
                         println!("... {path_str} fail: {e}");
                         panic!();
                     }
-                    Ok(_) => {
+                    Ok(s) => {
+                        s.visit(&mut s);
                         println!("... {path_str} ok");
                     }
                 }

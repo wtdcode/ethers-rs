@@ -1578,6 +1578,7 @@ dependencies = [
  "dunce",
  "env_logger",
  "ethers-core",
+ "eyre",
  "fs_extra",
  "futures-util",
  "getrandom 0.2.8",
