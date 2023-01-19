@@ -1070,7 +1070,7 @@ ast_node!(
 
 #[cfg(test)]
 mod tests {
-    use crate::artifacts::visitor::Visitable;
+    use crate::artifacts::visitor::{Visitable, Visitor};
 
     use super::*;
     use std::{fs, path::PathBuf};
@@ -1091,8 +1091,8 @@ mod tests {
                         println!("... {path_str} fail: {e}");
                         panic!();
                     }
-                    Ok(s) => {
-                        s.visit(&mut s);
+                    Ok(mut s) => {
+                        s.clone().visit_source_unit(&mut s);
                         println!("... {path_str} ok");
                     }
                 }
