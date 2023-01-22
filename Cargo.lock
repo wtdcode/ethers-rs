@@ -1588,6 +1588,7 @@ dependencies = [
  "md-5 0.10.5",
  "num_cpus",
  "once_cell",
+ "paste",
  "path-slash",
  "pretty_assertions",
  "rand 0.8.5",
@@ -2943,6 +2944,12 @@ dependencies = [
  "rand_core 0.6.3",
  "subtle",
 ]
+
+[[package]]
+name = "paste"
+version = "1.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d01a5bd0424d00070b0098dd17ebca6f961a959dead1dbcbbbc1d1cd8d3deeba"
 
 [[package]]
 name = "path-slash"

@@ -1070,7 +1070,7 @@ ast_node!(
 
 #[cfg(test)]
 mod tests {
-    use crate::artifacts::visitor::{Visitable, Visitor};
+    use crate::artifacts::visitor::Visitable;
 
     use super::*;
     use std::{fs, path::PathBuf};
@@ -1091,8 +1091,33 @@ mod tests {
                         println!("... {path_str} fail: {e}");
                         panic!();
                     }
-                    Ok(mut s) => {
-                        s.clone().visit_source_unit(&mut s);
+                    Ok(_) => {
+                        println!("... {path_str} ok");
+                    }
+                }
+            })
+    }
+
+    // Note: this implies that can_parse_ast works
+    #[test]
+    fn can_visit_ast() {
+        fs::read_dir(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("test-data").join("ast"))
+            .unwrap()
+            .for_each(|path| {
+                let path = path.unwrap().path();
+                let path_str = path.to_string_lossy();
+
+                let input = fs::read_to_string(&path).unwrap();
+                let deserializer = &mut serde_json::Deserializer::from_str(&input);
+
+                let mut ast: SourceUnit = serde_path_to_error::deserialize(deserializer).unwrap();
+
+                match ast.clone().visit(&mut ast) {
+                    Err(e) => {
+                        println!("... {path_str} fail: {e}");
+                        panic!();
+                    }
+                    Ok(_) => {
                         println!("... {path_str} ok");
                     }
                 }
