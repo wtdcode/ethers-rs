@@ -18,9 +18,11 @@ pub enum VisitError {
 }
 
 macro_rules! impl_visitor {
-    ($type:ty, $func:ident) => {
-        fn $func(&mut self, node_type: &mut $type) -> Result<(), Self::Error> {
+    ($type:ty) => {
+        paste::paste! {
+        fn [<visit_ $type:snake>](&mut self, node_type: &mut $type) -> Result<(), Self::Error> {
             node_type.visit(self)
+        }
         }
     };
 }
@@ -28,486 +30,86 @@ macro_rules! impl_visitor {
 pub trait Visitor: Sized {
     type Error: std::error::Error;
 
-    fn visit_source_unit(&mut self, _source_unit: &mut SourceUnit) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_pragma_directive(
-        &mut self,
-        pragma_directive: &mut PragmaDirective,
-    ) -> Result<(), Self::Error> {
-        pragma_directive.visit(self)
-    }
-
-    fn visit_import_directive(
-        &mut self,
-        import_directive: &mut ImportDirective,
-    ) -> Result<(), Self::Error> {
-        import_directive.visit(self)
-    }
-
-    fn visit_source_unit_part(
-        &mut self,
-        source_unit_part: &mut SourceUnitPart,
-    ) -> Result<(), Self::Error> {
-        source_unit_part.visit(self)
-    }
-
-    fn visit_using_for_directive(
-        &mut self,
-        using_for_directive: &mut UsingForDirective,
-    ) -> Result<(), Self::Error> {
-        using_for_directive.visit(self)
-    }
-
-    fn visit_variable_declaration(
-        &mut self,
-        variable_declaration: &mut VariableDeclaration,
-    ) -> Result<(), Self::Error> {
-        variable_declaration.visit(self)
-    }
-
-    fn visit_binary_operation(
-        &mut self,
-        binary_operation: &mut BinaryOperation,
-    ) -> Result<(), Self::Error> {
-        binary_operation.visit(self)
-    }
-
-    fn visit_conditional(&mut self, conditional: &mut Conditional) -> Result<(), Self::Error> {
-        conditional.visit(self)
-    }
-
-    // fn visit_elementary_type_name_expression(
-    //     &mut self,
-    //     elementary_type_name_expression: &mut ElementaryTypeNameExpression,
-    // ) -> Result<(), Self::Error> {
-    //     elementary_type_name_expression.visit(self)
-    // }
-
-    impl_visitor!(ElementaryTypeNameExpression, visit_elementary_type_name_expression);
-    impl_visitor!(FunctionCall, visit_function_call);
-
-    // fn visit_function_call(&mut self, _source_unit: &mut FunctionCall) -> Result<(), Self::Error>
-    // {     Ok(())
-    // }
-
-    fn visit_unary_operation(
-        &mut self,
-        _source_unit: &mut UnaryOperation,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_tuple_expression(
-        &mut self,
-        _source_unit: &mut TupleExpression,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_new_expression(
-        &mut self,
-        _source_unit: &mut NewExpression,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_member_access(&mut self, _source_unit: &mut MemberAccess) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_literal(&mut self, _source_unit: &mut Literal) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_index_range_access(
-        &mut self,
-        _source_unit: &mut IndexRangeAccess,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_index_access(&mut self, _source_unit: &mut IndexAccess) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_identifier(&mut self, _identifier: &mut Identifier) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_function_call_options(
-        &mut self,
-        _source_unit: &mut FunctionCallOptions,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_enum_definition(
-        &mut self,
-        _source_unit: &mut EnumDefinition,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_event_definition(
-        &mut self,
-        _source_unit: &mut EventDefinition,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_modifier_definition(
-        &mut self,
-        _source_unit: &mut ModifierDefinition,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_error_definition(
-        &mut self,
-        _source_unit: &mut ErrorDefinition,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_function_definition(
-        &mut self,
-        function_definition: &mut FunctionDefinition,
-    ) -> Result<(), Self::Error> {
-        function_definition.visit(self);
-        Ok(())
-    }
-
-    fn visit_struct_definition(
-        &mut self,
-        _source_unit: &mut StructDefinition,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_expression(&mut self, _expression: &mut Expression) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_statement(&mut self, _statement: &mut Statement) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_contract_definition(
-        &mut self,
-        _contract_definition: &mut ContractDefinition,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_contract_definition_part(
-        &mut self,
-        _contract_definition_part: &mut ContractDefinitionPart,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_type_name(&mut self, _type_name: &mut TypeName) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_user_defined_type_definition(
-        &mut self,
-        _type_name: &mut UserDefinedValueTypeDefinition,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_user_defined_value_type_definition(
-        &mut self,
-        _type_name: &mut UserDefinedValueTypeDefinition,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_user_defined_type_name_or_identifier_path(
-        &mut self,
-        _user_defined_type_name_or_identifier_path: &mut UserDefinedTypeNameOrIdentifierPath,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_expression_or_variable_declaration_statement(
-        &mut self,
-        _expression_or_variable_declaration_statement: &mut ExpressionOrVariableDeclarationStatement,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_identifer_or_identifier_path(
-        &mut self,
-        _identifier_or_identifier_path: &mut IdentifierOrIdentifierPath,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_inheritance_specifier(
-        &mut self,
-        _inheritance_specifier: &mut InheritanceSpecifier,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_user_defined_type_name(
-        &mut self,
-        _inheritance_specifier: &mut UserDefinedTypeName,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_mapping(&mut self, _inheritance_specifier: &mut Mapping) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_function_type_name(
-        &mut self,
-        _inheritance_specifier: &mut FunctionTypeName,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_elementary_type_name(
-        &mut self,
-        _inheritance_specifier: &mut ElementaryTypeName,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_array_type_name(
-        &mut self,
-        _inheritance_specifier: &mut ArrayTypeName,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_assignment(&mut self, _assignment: &mut Assignment) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_assignment_operator(
-        &mut self,
-        _assignment_operator: &mut AssignmentOperator,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_binary_operator(
-        &mut self,
-        _binary_operator: &mut BinaryOperator,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_place_holder_statement(
-        &mut self,
-        _binary_operator: &mut PlaceholderStatement,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_inline_assembly(
-        &mut self,
-        _binary_operator: &mut InlineAssembly,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_if_statement(
-        &mut self,
-        _binary_operator: &mut IfStatement,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_for_statement(
-        &mut self,
-        _binary_operator: &mut ForStatement,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_expression_statement(
-        &mut self,
-        _binary_operator: &mut ExpressionStatement,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_emit_statement(
-        &mut self,
-        _binary_operator: &mut EmitStatement,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_do_while_statement(
-        &mut self,
-        _binary_operator: &mut DoWhileStatement,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_continue(&mut self, _binary_operator: &mut Continue) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_break(&mut self, _binary_operator: &mut Break) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_block(&mut self, _binary_operator: &mut Block) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_return(&mut self, _binary_operator: &mut Return) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_revert_statement(
-        &mut self,
-        _binary_operator: &mut RevertStatement,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_try_statement(
-        &mut self,
-        _binary_operator: &mut TryStatement,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_unchecked_block(
-        &mut self,
-        _binary_operator: &mut UncheckedBlock,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_variable_declaration_statement(
-        &mut self,
-        _binary_operator: &mut VariableDeclarationStatement,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_while_statement(
-        &mut self,
-        _binary_operator: &mut WhileStatement,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_identifier_path(
-        &mut self,
-        _binary_operator: &mut IdentifierPath,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_yul_assignment(
-        &mut self,
-        _binary_operator: &mut YulAssignment,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_yul_block(&mut self, _binary_operator: &mut YulBlock) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_yul_break(&mut self, _binary_operator: &mut YulBreak) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_yul_continue(
-        &mut self,
-        _binary_operator: &mut YulContinue,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_yul_expression_statement(
-        &mut self,
-        _binary_operator: &mut YulExpressionStatement,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_yul_leave(&mut self, _binary_operator: &mut YulLeave) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_yul_function_definition(
-        &mut self,
-        _binary_operator: &mut YulFunctionDefinition,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_yul_for_loop(&mut self, _binary_operator: &mut YulForLoop) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_yul_if(&mut self, _binary_operator: &mut YulIf) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_yul_switch(&mut self, _binary_operator: &mut YulSwitch) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_yul_variable_declaration(
-        &mut self,
-        _binary_operator: &mut YulVariableDeclaration,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_yul_function_call(
-        &mut self,
-        _binary_operator: &mut YulFunctionCall,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_yul_identifier(
-        &mut self,
-        _binary_operator: &mut YulIdentifier,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn visit_yul_literal(&mut self, _binary_operator: &mut YulLiteral) -> Result<(), Self::Error> {
-        Ok(())
-    }
+    impl_visitor!(SourceUnit);
+    impl_visitor!(PragmaDirective);
+    impl_visitor!(ImportDirective);
+    impl_visitor!(SourceUnitPart);
+    impl_visitor!(UsingForDirective);
+    impl_visitor!(VariableDeclaration);
+    impl_visitor!(BinaryOperation);
+    impl_visitor!(Conditional);
+    impl_visitor!(ElementaryTypeName);
+    impl_visitor!(ElementaryTypeNameExpression);
+    impl_visitor!(FunctionCall);
+    impl_visitor!(UnaryOperation);
+    impl_visitor!(TupleExpression);
+    impl_visitor!(NewExpression);
+    impl_visitor!(MemberAccess);
+    impl_visitor!(Literal);
+    impl_visitor!(IndexRangeAccess);
+    impl_visitor!(IndexAccess);
+    impl_visitor!(Identifier);
+    impl_visitor!(FunctionCallOptions);
+    impl_visitor!(EnumDefinition);
+    impl_visitor!(EventDefinition);
+    impl_visitor!(ModifierDefinition);
+    impl_visitor!(ErrorDefinition);
+    impl_visitor!(FunctionDefinition);
+    impl_visitor!(StructDefinition);
+    impl_visitor!(Expression);
+    impl_visitor!(Statement);
+    impl_visitor!(ContractDefinition);
+    impl_visitor!(ContractDefinitionPart);
+    impl_visitor!(TypeName);
+    impl_visitor!(UserDefinedValueTypeDefinition);
+    impl_visitor!(UserDefinedTypeNameOrIdentifierPath);
+    impl_visitor!(ExpressionOrVariableDeclarationStatement);
+    impl_visitor!(IdentifierOrIdentifierPath);
+    impl_visitor!(InheritanceSpecifier);
+    impl_visitor!(UserDefinedTypeName);
+    impl_visitor!(Mapping);
+    impl_visitor!(FunctionTypeName);
+    impl_visitor!(ArrayTypeName);
+    impl_visitor!(Assignment);
+    impl_visitor!(AssignmentOperator);
+    impl_visitor!(BinaryOperator);
+    impl_visitor!(PlaceholderStatement);
+    impl_visitor!(InlineAssembly);
+    impl_visitor!(IfStatement);
+    impl_visitor!(ForStatement);
+    impl_visitor!(ExpressionStatement);
+    impl_visitor!(EmitStatement);
+    impl_visitor!(DoWhileStatement);
+    impl_visitor!(Continue);
+    impl_visitor!(Break);
+    impl_visitor!(Block);
+    impl_visitor!(Return);
+    impl_visitor!(RevertStatement);
+    impl_visitor!(TryStatement);
+    impl_visitor!(UncheckedBlock);
+    impl_visitor!(VariableDeclarationStatement);
+    impl_visitor!(WhileStatement);
+    impl_visitor!(IdentifierPath);
+    impl_visitor!(YulAssignment);
+    impl_visitor!(YulBlock);
+    impl_visitor!(YulBreak);
+    impl_visitor!(YulContinue);
+    impl_visitor!(YulExpressionStatement);
+    impl_visitor!(YulFunctionDefinition);
+    impl_visitor!(YulForLoop);
+    impl_visitor!(YulIf);
+    impl_visitor!(YulSwitch);
+    impl_visitor!(YulVariableDeclaration);
+    impl_visitor!(YulFunctionCall);
+    impl_visitor!(YulIdentifier);
+    impl_visitor!(YulLiteral);
+    impl_visitor!(YulLeave);
 }
 
 pub trait Visitable {
     fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
     where
         V: Visitor + Sized;
-}
-
-impl<T> Visitable for Vec<T>
-where
-    T: Visitable,
-{
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
-    where
-        V: Visitor,
-    {
-        for item in self.iter_mut() {
-            item.visit(v)?;
-        }
-        Ok(())
-    }
 }
 
 /// Helper for nodes that don't need much implementation to traverse the childrens
@@ -525,7 +127,49 @@ macro_rules! empty_visitable {
 }
 
 empty_visitable!(PragmaDirective);
+empty_visitable!(ElementaryTypeName);
 empty_visitable!(ElementaryTypeNameExpression);
+empty_visitable!(Literal);
+empty_visitable!(Identifier);
+empty_visitable!(EnumDefinition);
+empty_visitable!(EventDefinition);
+empty_visitable!(ModifierDefinition);
+empty_visitable!(UserDefinedTypeName);
+empty_visitable!(Mapping);
+empty_visitable!(FunctionTypeName);
+empty_visitable!(ArrayTypeName);
+empty_visitable!(AssignmentOperator);
+empty_visitable!(BinaryOperator);
+empty_visitable!(PlaceholderStatement);
+empty_visitable!(Continue);
+empty_visitable!(Break);
+empty_visitable!(IdentifierPath);
+empty_visitable!(YulAssignment);
+empty_visitable!(YulBreak);
+empty_visitable!(YulExpressionStatement);
+empty_visitable!(YulFunctionDefinition);
+empty_visitable!(YulForLoop);
+empty_visitable!(YulIf);
+empty_visitable!(YulSwitch);
+empty_visitable!(YulVariableDeclaration);
+empty_visitable!(YulFunctionCall);
+empty_visitable!(YulIdentifier);
+empty_visitable!(YulLiteral);
+
+impl<T> Visitable for Vec<T>
+where
+    T: Visitable,
+{
+    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    where
+        V: Visitor,
+    {
+        for item in self.iter_mut() {
+            item.visit(v)?;
+        }
+        Ok(())
+    }
+}
 
 impl Visitor for SourceUnit {
     type Error = VisitError;
@@ -559,7 +203,7 @@ impl Visitable for SourceUnitPart {
             SourceUnitPart::FunctionDefinition(e) => v.visit_function_definition(e),
             SourceUnitPart::StructDefinition(e) => v.visit_struct_definition(e),
             SourceUnitPart::UserDefinedValueTypeDefinition(e) => {
-                v.visit_user_defined_type_definition(e)
+                v.visit_user_defined_value_type_definition(e)
             }
             SourceUnitPart::ContractDefinition(e) => v.visit_contract_definition(e),
         }
@@ -607,7 +251,7 @@ impl Visitable for Statement {
             Statement::ForStatement(e) => v.visit_for_statement(e),
             Statement::IfStatement(e) => v.visit_if_statement(e),
             Statement::InlineAssembly(e) => v.visit_inline_assembly(e),
-            Statement::PlaceholderStatement(e) => v.visit_place_holder_statement(e),
+            Statement::PlaceholderStatement(e) => v.visit_placeholder_statement(e),
             Statement::Return(e) => v.visit_return(e),
             Statement::RevertStatement(e) => v.visit_revert_statement(e),
             Statement::TryStatement(e) => v.visit_try_statement(e),
