@@ -1110,7 +1110,8 @@ mod tests {
                 let input = fs::read_to_string(&path).unwrap();
                 let deserializer = &mut serde_json::Deserializer::from_str(&input);
 
-                let mut ast: SourceUnit = serde_path_to_error::deserialize(deserializer).unwrap();
+                let mut ast: SourceUnit = serde_path_to_error::deserialize(deserializer)
+                    .expect("Ast deserialization failed");
 
                 match ast.clone().visit(&mut ast) {
                     Err(e) => {

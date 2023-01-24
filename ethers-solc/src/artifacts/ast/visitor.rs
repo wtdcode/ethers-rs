@@ -9,7 +9,7 @@ use super::{
 use eyre::Result;
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Clone)]
 pub enum VisitError {
     #[error("{0}")]
     MsgError(String),
@@ -17,7 +17,15 @@ pub enum VisitError {
     Unknown,
 }
 
-pub trait Visitor {
+macro_rules! impl_visitor {
+    ($type:ty, $func:ident) => {
+        fn $func(&mut self, node_type: &mut $type) -> Result<(), Self::Error> {
+            node_type.visit(self)
+        }
+    };
+}
+
+pub trait Visitor: Sized {
     type Error: std::error::Error;
 
     fn visit_source_unit(&mut self, _source_unit: &mut SourceUnit) -> Result<(), Self::Error> {
@@ -26,61 +34,63 @@ pub trait Visitor {
 
     fn visit_pragma_directive(
         &mut self,
-        _pragma_directive: &mut PragmaDirective,
+        pragma_directive: &mut PragmaDirective,
     ) -> Result<(), Self::Error> {
-        Ok(())
+        pragma_directive.visit(self)
     }
 
     fn visit_import_directive(
         &mut self,
-        _import_directive: &mut ImportDirective,
+        import_directive: &mut ImportDirective,
     ) -> Result<(), Self::Error> {
-        Ok(())
+        import_directive.visit(self)
     }
 
     fn visit_source_unit_part(
         &mut self,
-        _source_unit_part: &mut SourceUnitPart,
+        source_unit_part: &mut SourceUnitPart,
     ) -> Result<(), Self::Error> {
-        // source_unit_part.visit(self)
-        Ok(())
+        source_unit_part.visit(self)
     }
 
     fn visit_using_for_directive(
         &mut self,
-        _source_unit: &mut UsingForDirective,
+        using_for_directive: &mut UsingForDirective,
     ) -> Result<(), Self::Error> {
-        Ok(())
+        using_for_directive.visit(self)
     }
 
     fn visit_variable_declaration(
         &mut self,
-        _source_unit: &mut VariableDeclaration,
+        variable_declaration: &mut VariableDeclaration,
     ) -> Result<(), Self::Error> {
-        Ok(())
+        variable_declaration.visit(self)
     }
 
     fn visit_binary_operation(
         &mut self,
-        _source_unit: &mut BinaryOperation,
+        binary_operation: &mut BinaryOperation,
     ) -> Result<(), Self::Error> {
-        Ok(())
+        binary_operation.visit(self)
     }
 
-    fn visit_conditional(&mut self, _source_unit: &mut Conditional) -> Result<(), Self::Error> {
-        Ok(())
+    fn visit_conditional(&mut self, conditional: &mut Conditional) -> Result<(), Self::Error> {
+        conditional.visit(self)
     }
 
-    fn visit_elementary_type_name_expression(
-        &mut self,
-        _source_unit: &mut ElementaryTypeNameExpression,
-    ) -> Result<(), Self::Error> {
-        Ok(())
-    }
+    // fn visit_elementary_type_name_expression(
+    //     &mut self,
+    //     elementary_type_name_expression: &mut ElementaryTypeNameExpression,
+    // ) -> Result<(), Self::Error> {
+    //     elementary_type_name_expression.visit(self)
+    // }
 
-    fn visit_function_call(&mut self, _source_unit: &mut FunctionCall) -> Result<(), Self::Error> {
-        Ok(())
-    }
+    impl_visitor!(ElementaryTypeNameExpression, visit_elementary_type_name_expression);
+    impl_visitor!(FunctionCall, visit_function_call);
+
+    // fn visit_function_call(&mut self, _source_unit: &mut FunctionCall) -> Result<(), Self::Error>
+    // {     Ok(())
+    // }
 
     fn visit_unary_operation(
         &mut self,
@@ -163,8 +173,9 @@ pub trait Visitor {
 
     fn visit_function_definition(
         &mut self,
-        _source_unit: &mut FunctionDefinition,
+        function_definition: &mut FunctionDefinition,
     ) -> Result<(), Self::Error> {
+        function_definition.visit(self);
         Ok(())
     }
 
@@ -481,7 +492,7 @@ pub trait Visitor {
 pub trait Visitable {
     fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
     where
-        V: Visitor;
+        V: Visitor + Sized;
 }
 
 impl<T> Visitable for Vec<T>
@@ -500,20 +511,39 @@ where
 }
 
 /// Helper for nodes that don't need much implementation to traverse the childrens
-// macro_rules! impl_visitable {
-//     ($type:ty, $func:ident) => {
-//         impl Visitable for $type {
-//             fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
-//             where
-//                 V: Visitor,
-//             {
-//                 v.$func(self)
-//             }
-//         }
-//     };
-// }
+macro_rules! empty_visitable {
+    ($type:ty) => {
+        impl Visitable for $type {
+            fn visit<V>(&mut self, _: &mut V) -> Result<(), V::Error>
+            where
+                V: Visitor,
+            {
+                Ok(())
+            }
+        }
+    };
+}
 
-// Writing a macro to do that is not trivial at all
+empty_visitable!(PragmaDirective);
+empty_visitable!(ElementaryTypeNameExpression);
+
+impl Visitor for SourceUnit {
+    type Error = VisitError;
+}
+
+/// Main entry point of the ast
+impl Visitable for SourceUnit {
+    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    where
+        V: Visitor,
+    {
+        v.visit_source_unit(self)?;
+        self.nodes.visit(v)
+    }
+}
+
+// Writing a macro to do that (generating enum variants and calling their underlying function) is
+// not trivial at all
 impl Visitable for SourceUnitPart {
     fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
     where
@@ -700,21 +730,6 @@ impl Visitable for YulExpression {
     }
 }
 
-impl Visitor for SourceUnit {
-    type Error = VisitError;
-}
-
-/// Main entry point of the ast
-impl Visitable for SourceUnit {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
-    where
-        V: Visitor,
-    {
-        v.visit_source_unit(self)?;
-        self.nodes.visit(v)
-    }
-}
-
 /// Implement nodes that may have sub nodes
 impl Visitable for ImportDirective {
     fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
@@ -822,7 +837,7 @@ impl Visitable for ParameterList {
 impl Visitable for FunctionDefinition {
     fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
     where
-        V: Visitor,
+        V: Visitor + Sized,
     {
         self.body.visit(v)?;
         self.modifiers.visit(v)?;
