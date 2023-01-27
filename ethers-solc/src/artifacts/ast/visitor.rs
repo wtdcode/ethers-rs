@@ -20,17 +20,20 @@ pub enum VisitError {
 macro_rules! impl_visitor {
     ($type:ty) => {
         paste::paste! {
-        fn [<visit_ $type:snake>](&mut self, node_type: &mut $type) -> Result<(), Self::Error> {
+        fn [<visit_ $type:snake>](&mut self, node_type: &mut $type) -> Result<(), VisitError> {
             node_type.visit(self)
         }
         }
     };
 }
 
-pub trait Visitor: Sized {
-    type Error: std::error::Error;
+pub trait Visitor<D> {
+    fn shared_data(&mut self) -> &D;
 
-    impl_visitor!(SourceUnit);
+    fn visit_source_unit(&mut self, _source_unit: &mut SourceUnit) -> Result<(), VisitError> {
+        Ok(())
+    }
+
     impl_visitor!(PragmaDirective);
     impl_visitor!(ImportDirective);
     impl_visitor!(SourceUnitPart);
@@ -45,6 +48,7 @@ pub trait Visitor: Sized {
     impl_visitor!(TupleExpression);
     impl_visitor!(NewExpression);
     impl_visitor!(MemberAccess);
+    impl_visitor!(TypeDescriptions);
     impl_visitor!(Literal);
     impl_visitor!(IndexRangeAccess);
     impl_visitor!(IndexAccess);
@@ -107,18 +111,18 @@ pub trait Visitor: Sized {
 }
 
 pub trait Visitable {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor + Sized;
+        V: Visitor<D> + ?Sized;
 }
 
 /// Helper for nodes that don't need much implementation to traverse the childrens
 macro_rules! empty_visitable {
     ($type:ty) => {
         impl Visitable for $type {
-            fn visit<V>(&mut self, _: &mut V) -> Result<(), V::Error>
+            fn visit<V, D>(&mut self, _: &mut V) -> Result<(), VisitError>
             where
-                V: Visitor,
+                V: Visitor<D> + ?Sized,
             {
                 Ok(())
             }
@@ -129,30 +133,27 @@ macro_rules! empty_visitable {
 empty_visitable!(PragmaDirective);
 empty_visitable!(ElementaryTypeName);
 empty_visitable!(ElementaryTypeNameExpression);
+empty_visitable!(EnumValue);
 empty_visitable!(Literal);
 empty_visitable!(Identifier);
-empty_visitable!(EnumDefinition);
 empty_visitable!(EventDefinition);
 empty_visitable!(ModifierDefinition);
 empty_visitable!(UserDefinedTypeName);
 empty_visitable!(Mapping);
 empty_visitable!(FunctionTypeName);
-empty_visitable!(ArrayTypeName);
 empty_visitable!(AssignmentOperator);
+empty_visitable!(TypeDescriptions);
 empty_visitable!(BinaryOperator);
 empty_visitable!(PlaceholderStatement);
 empty_visitable!(Continue);
 empty_visitable!(Break);
 empty_visitable!(IdentifierPath);
-empty_visitable!(YulAssignment);
 empty_visitable!(YulBreak);
 empty_visitable!(YulExpressionStatement);
 empty_visitable!(YulFunctionDefinition);
-empty_visitable!(YulForLoop);
 empty_visitable!(YulIf);
 empty_visitable!(YulSwitch);
 empty_visitable!(YulVariableDeclaration);
-empty_visitable!(YulFunctionCall);
 empty_visitable!(YulIdentifier);
 empty_visitable!(YulLiteral);
 
@@ -160,9 +161,9 @@ impl<T> Visitable for Vec<T>
 where
     T: Visitable,
 {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         for item in self.iter_mut() {
             item.visit(v)?;
@@ -171,27 +172,25 @@ where
     }
 }
 
-impl Visitor for SourceUnit {
-    type Error = VisitError;
-}
+// impl<D> Visitor<D> for SourceUnit {
+//     type Error = VisitError;
+// }
 
 /// Main entry point of the ast
 impl Visitable for SourceUnit {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         v.visit_source_unit(self)?;
         self.nodes.visit(v)
     }
 }
 
-// Writing a macro to do that (generating enum variants and calling their underlying function) is
-// not trivial at all
 impl Visitable for SourceUnitPart {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         match self {
             SourceUnitPart::PragmaDirective(e) => v.visit_pragma_directive(e),
@@ -211,9 +210,9 @@ impl Visitable for SourceUnitPart {
 }
 
 impl Visitable for Expression {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         match self {
             Expression::Assignment(e) => v.visit_assignment(e),
@@ -237,9 +236,9 @@ impl Visitable for Expression {
 }
 
 impl Visitable for Statement {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         match self {
             Statement::Block(e) => v.visit_block(e),
@@ -263,9 +262,9 @@ impl Visitable for Statement {
 }
 
 impl Visitable for ContractDefinitionPart {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         match self {
             ContractDefinitionPart::EnumDefinition(e) => v.visit_enum_definition(e),
@@ -284,9 +283,9 @@ impl Visitable for ContractDefinitionPart {
 }
 
 impl Visitable for TypeName {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         match self {
             TypeName::ArrayTypeName(e) => v.visit_array_type_name(e),
@@ -299,9 +298,9 @@ impl Visitable for TypeName {
 }
 
 impl Visitable for UserDefinedTypeNameOrIdentifierPath {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         match self {
             UserDefinedTypeNameOrIdentifierPath::UserDefinedTypeName(e) => {
@@ -313,9 +312,9 @@ impl Visitable for UserDefinedTypeNameOrIdentifierPath {
 }
 
 impl Visitable for ExpressionOrVariableDeclarationStatement {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         match self {
             ExpressionOrVariableDeclarationStatement::ExpressionStatement(e) => {
@@ -329,9 +328,9 @@ impl Visitable for ExpressionOrVariableDeclarationStatement {
 }
 
 impl Visitable for IdentifierOrIdentifierPath {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         match self {
             IdentifierOrIdentifierPath::Identifier(e) => v.visit_identifier(e),
@@ -341,9 +340,9 @@ impl Visitable for IdentifierOrIdentifierPath {
 }
 
 impl Visitable for YulStatement {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         match self {
             YulStatement::YulAssignment(e) => v.visit_yul_assignment(e),
@@ -362,9 +361,9 @@ impl Visitable for YulStatement {
 }
 
 impl Visitable for YulExpression {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         match self {
             YulExpression::YulFunctionCall(e) => v.visit_yul_function_call(e),
@@ -376,9 +375,9 @@ impl Visitable for YulExpression {
 
 /// Implement nodes that may have sub nodes
 impl Visitable for ImportDirective {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.symbol_aliases.iter_mut().try_for_each(|sa| {
             let foreign = &mut sa.foreign;
@@ -388,48 +387,58 @@ impl Visitable for ImportDirective {
 }
 
 impl Visitable for UsingForDirective {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
-        if let Some(ln) = &mut self.library_name {
-            ln.visit(v)?;
-        }
-
+        self.function_list.visit(v)?;
+        self.library_name.visit(v)?;
         self.type_name.visit(v)
     }
 }
 
-impl Visitable for VariableDeclaration {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+impl Visitable for FunctionIdentifierPath {
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
-        if let Some(overrides) = &mut self.overrides {
-            overrides.visit(v)?;
-        }
+        self.function.visit(v)
+    }
+}
 
-        if let Some(tn) = &mut self.type_name {
-            return tn.visit(v)
-        }
-
+impl Visitable for VariableDeclaration {
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
+    where
+        V: Visitor<D> + ?Sized,
+    {
+        self.overrides.visit(v)?;
+        self.type_name.visit(v)?;
         self.value.visit(v)
     }
 }
 
-impl Visitable for ErrorDefinition {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+impl Visitable for EnumDefinition {
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
+    {
+        self.members.visit(v)
+    }
+}
+
+impl Visitable for ErrorDefinition {
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
+    where
+        V: Visitor<D> + ?Sized,
     {
         self.parameters.parameters.visit(v)
     }
 }
 
 impl Visitable for ModifierInvocation {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.arguments.visit(v)?;
         self.modifier_name.visit(v)
@@ -437,18 +446,18 @@ impl Visitable for ModifierInvocation {
 }
 
 impl Visitable for Block {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.statements.visit(v)
     }
 }
 
 impl Visitable for OverrideSpecifier {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         for ov in self.overrides.iter_mut() {
             ov.visit(v)?;
@@ -461,27 +470,27 @@ impl<T> Visitable for Option<T>
 where
     T: Visitable,
 {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.as_mut().map_or_else(|| Ok(()), |val| val.visit(v))
     }
 }
 
 impl Visitable for ParameterList {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.parameters.visit(v)
     }
 }
 
 impl Visitable for FunctionDefinition {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor + Sized,
+        V: Visitor<D> + ?Sized,
     {
         self.body.visit(v)?;
         self.modifiers.visit(v)?;
@@ -492,27 +501,37 @@ impl Visitable for FunctionDefinition {
 }
 
 impl Visitable for StructDefinition {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.members.visit(v)
     }
 }
 
 impl Visitable for UserDefinedValueTypeDefinition {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.underlying_type.visit(v)
     }
 }
 
-impl Visitable for InheritanceSpecifier {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+impl Visitable for ArrayTypeName {
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
+    {
+        self.type_descriptions.visit(v)?;
+        self.length.visit(v)
+    }
+}
+
+impl Visitable for InheritanceSpecifier {
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
+    where
+        V: Visitor<D> + ?Sized,
     {
         self.arguments.visit(v)?;
         self.base_name.visit(v)
@@ -520,9 +539,9 @@ impl Visitable for InheritanceSpecifier {
 }
 
 impl Visitable for ContractDefinition {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.base_contracts.visit(v)?;
         self.nodes.visit(v)
@@ -532,9 +551,9 @@ impl Visitable for ContractDefinition {
 macro_rules! impl_visitable_expression {
     ($type:ty) => {
         impl Visitable for $type {
-            fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+            fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
             where
-                V: Visitor,
+                V: Visitor<D> + ?Sized,
             {
                 self.lhs.visit(v)?;
                 self.rhs.visit(v)
@@ -547,9 +566,9 @@ impl_visitable_expression!(Assignment);
 impl_visitable_expression!(BinaryOperation);
 
 impl Visitable for Conditional {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.condition.visit(v)?;
         self.false_expression.visit(v)?;
@@ -558,9 +577,9 @@ impl Visitable for Conditional {
 }
 
 impl Visitable for FunctionCall {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.arguments.visit(v)?;
         self.expression.visit(v)
@@ -568,9 +587,9 @@ impl Visitable for FunctionCall {
 }
 
 impl Visitable for FunctionCallOptions {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.expression.visit(v)?;
         self.options.visit(v)
@@ -578,9 +597,9 @@ impl Visitable for FunctionCallOptions {
 }
 
 impl Visitable for IndexAccess {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.base_expression.visit(v)?;
         self.index_expression.visit(v)
@@ -588,9 +607,9 @@ impl Visitable for IndexAccess {
 }
 
 impl Visitable for IndexRangeAccess {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.base_expression.visit(v)?;
         self.start_expression.visit(v)?;
@@ -599,45 +618,45 @@ impl Visitable for IndexRangeAccess {
 }
 
 impl Visitable for MemberAccess {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.expression.visit(v)
     }
 }
 
 impl Visitable for NewExpression {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.type_name.visit(v)
     }
 }
 
 impl Visitable for TupleExpression {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.components.visit(v)
     }
 }
 
 impl Visitable for UnaryOperation {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.sub_expression.visit(v)
     }
 }
 
 impl Visitable for DoWhileStatement {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.block.visit(v)?;
         self.condition.visit(v)
@@ -645,27 +664,27 @@ impl Visitable for DoWhileStatement {
 }
 
 impl Visitable for EmitStatement {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.event_call.visit(v)
     }
 }
 
 impl Visitable for ExpressionStatement {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.expression.visit(v)
     }
 }
 
 impl Visitable for BlockOrStatement {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         match self {
             BlockOrStatement::Block(e) => e.visit(v),
@@ -675,9 +694,9 @@ impl Visitable for BlockOrStatement {
 }
 
 impl Visitable for ForStatement {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.body.visit(v)?;
         self.condition.visit(v)?;
@@ -687,9 +706,9 @@ impl Visitable for ForStatement {
 }
 
 impl Visitable for VariableDeclarationStatement {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.declarations.visit(v)?;
         self.initial_value.visit(v)
@@ -697,9 +716,9 @@ impl Visitable for VariableDeclarationStatement {
 }
 
 impl Visitable for IfStatement {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.condition.visit(v)?;
         self.false_body.visit(v)?;
@@ -708,45 +727,77 @@ impl Visitable for IfStatement {
 }
 
 impl Visitable for YulBlock {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.statements.visit(v)
     }
 }
 
-impl Visitable for InlineAssembly {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+impl Visitable for YulAssignment {
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
+    {
+        self.value.visit(v)?;
+        self.variable_names.visit(v)
+    }
+}
+
+impl Visitable for YulForLoop {
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
+    where
+        V: Visitor<D> + ?Sized,
+    {
+        self.body.visit(v)?;
+        self.condition.visit(v)?;
+        self.post.visit(v)?;
+        self.pre.visit(v)
+    }
+}
+
+impl Visitable for YulFunctionCall {
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
+    where
+        V: Visitor<D> + ?Sized,
+    {
+        self.arguments.visit(v)?;
+        self.function_name.visit(v)
+    }
+}
+
+impl Visitable for InlineAssembly {
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
+    where
+        V: Visitor<D> + ?Sized,
     {
         self.ast.visit(v)
     }
 }
 
 impl Visitable for Return {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.expression.visit(v)
     }
 }
 
 impl Visitable for RevertStatement {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.error_call.visit(v)
     }
 }
 
 impl Visitable for TryCatchClause {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.block.visit(v)?;
         self.parameters.visit(v)
@@ -754,9 +805,9 @@ impl Visitable for TryCatchClause {
 }
 
 impl Visitable for TryStatement {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.clauses.visit(v)?;
         self.external_call.visit(v)
@@ -764,18 +815,18 @@ impl Visitable for TryStatement {
 }
 
 impl Visitable for UncheckedBlock {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.statements.visit(v)
     }
 }
 
 impl Visitable for WhileStatement {
-    fn visit<V>(&mut self, v: &mut V) -> Result<(), V::Error>
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
-        V: Visitor,
+        V: Visitor<D> + ?Sized,
     {
         self.body.visit(v)?;
         self.condition.visit(v)
