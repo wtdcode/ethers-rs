@@ -28,15 +28,15 @@ pub mod mock;
 /// Once `TempProject` is dropped, the temp dir is automatically removed, see [`TempDir::drop()`]
 pub struct TempProject<T: ArtifactOutput = ConfigurableArtifacts> {
     /// temporary workspace root
-    _root: TempDir,
+    pub root: TempDir,
     /// actual project workspace with the `root` tempdir as its root
-    inner: Project<T>,
+    pub inner: Project<T>,
 }
 
 impl<T: ArtifactOutput> TempProject<T> {
     /// Makes sure all resources are created
     pub fn create_new(root: TempDir, inner: Project<T>) -> std::result::Result<Self, SolcIoError> {
-        let mut project = Self { _root: root, inner };
+        let mut project = Self { root, inner };
         project.paths().create_all()?;
         // ignore license warnings
         project.inner.ignored_error_codes.push(1878);
