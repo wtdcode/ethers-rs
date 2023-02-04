@@ -600,7 +600,7 @@ ast_node!(
 expr_node!(
     /// A tuple expression.
     struct TupleExpression {
-        components: Vec<Expression>,
+        components: Vec<Option<Expression>>,
         is_inline_array: bool,
     }
 );

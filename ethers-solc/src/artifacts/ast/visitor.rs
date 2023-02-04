@@ -658,7 +658,9 @@ impl Visitable for TupleExpression {
     where
         V: Visitor<D> + ?Sized,
     {
-        self.components.iter_mut().try_for_each(|s| v.visit_expression(s))
+        self.components
+            .iter_mut()
+            .try_for_each(|s| s.as_mut().map_or_else(|| Ok(()), |n| v.visit_expression(n)))
     }
 }
 
