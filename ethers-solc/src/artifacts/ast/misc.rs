@@ -111,3 +111,38 @@ pub struct TypeDescriptions {
     pub type_identifier: Option<String>,
     pub type_string: Option<String>,
 }
+
+// TODO: do it!
+// #[derive(PartialEq, Debug)]
+// pub struct ParsedTypes {
+//     pub identifier: TypeId,
+//     pub visibility: Option<Visibility>,
+//     pub returns: Vec<String>,
+// }
+
+// impl FromStr for Visibility {
+
+// }
+
+// impl From<TypeDescriptions> for ParsedTypes {
+//     fn from(value: TypeDescriptions) -> Result<Self> {
+//         let identifiers: Vec<String> = match type_descriptions.type_identifier {
+//             Some(val) => {
+//                 let val = val.split("$");
+//                 val.map(|i| i.to_string()).collect()
+//             }
+//             None => return None,
+//         };
+
+//         dbg!(&identifiers);
+
+//         let ids: Vec<String> = identifiers[0].split('_').map(|i| i.to_string()).collect();
+//         dbg!(&ids);
+//         let identifier = ids[1].clone().into();
+//         dbg!(&identifier, &ids[2]);
+//         let visibility = serde_json::from_str(&ids[2]).unwrap_or(None);
+//         dbg!(&visibility);
+
+//         Some(ParsedTypes { identifier, visibility, returns: vec![identifiers[2].clone().into()]
+// })     }
+// }

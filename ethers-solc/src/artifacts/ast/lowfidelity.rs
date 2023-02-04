@@ -27,8 +27,10 @@ pub struct Ast {
 impl Ast {
     // TODO: find a better name
     pub fn to_typed(self) -> SourceUnit {
-        let data = serde_json::to_string(&self).unwrap();
-        serde_json::from_str(&data).unwrap()
+        let data = serde_json::to_string_pretty(&self).unwrap();
+        serde_json::from_str(&data).unwrap_or_else(|e| {
+            panic!("Deserialization failed for {} file, error: {}", self.absolute_path, e)
+        })
     }
 }
 

@@ -900,6 +900,7 @@ pub enum AssemblyReferenceSuffix {
 /// Inline assembly flags.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum InlineAssemblyFlag {
+    #[serde(rename = "memory-safe")]
     MemorySafe,
 }
 
@@ -1072,7 +1073,7 @@ ast_node!(
 mod tests {
     use crate::artifacts::visitor::Visitable;
 
-    use super::*;
+    use super::{visitor::Visitor, *};
     use std::{fs, path::PathBuf};
 
     #[test]
@@ -1098,6 +1099,17 @@ mod tests {
             })
     }
 
+    struct DummyState;
+
+    #[derive(Default)]
+    struct DummyVisitor;
+
+    impl Visitor<DummyState> for DummyVisitor {
+        fn shared_data(&mut self) -> &DummyState {
+            &DummyState {}
+        }
+    }
+
     // Note: this implies that can_parse_ast works
     #[test]
     fn can_visit_ast() {
@@ -1110,10 +1122,12 @@ mod tests {
                 let input = fs::read_to_string(&path).unwrap();
                 let deserializer = &mut serde_json::Deserializer::from_str(&input);
 
-                let mut ast: SourceUnit = serde_path_to_error::deserialize(deserializer)
+                let ast: SourceUnit = serde_path_to_error::deserialize(deserializer)
                     .expect("Ast deserialization failed");
 
-                match ast.clone().visit(&mut ast) {
+                let mut visitor = DummyVisitor::default();
+
+                match ast.clone().visit(&mut visitor) {
                     Err(e) => {
                         println!("... {path_str} fail: {e}");
                         panic!();
