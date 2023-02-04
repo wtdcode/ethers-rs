@@ -500,6 +500,7 @@ impl Visitable for FunctionDefinition {
         V: Visitor<D> + ?Sized,
     {
         self.body.as_mut().map_or_else(|| Ok(()), |n| v.visit_block(n))?;
+        self.modifiers.iter_mut().try_for_each(|s| v.visit_modifier_invocation(s))?;
         self.overrides.as_mut().map_or_else(|| Ok(()), |n| v.visit_override_specifier(n))?;
         v.visit_parameter_list(&mut self.parameters)?;
         v.visit_parameter_list(&mut self.return_parameters)
@@ -732,7 +733,8 @@ impl Visitable for VariableDeclarationStatement {
     {
         self.declarations.iter_mut().try_for_each(|s| {
             s.as_mut().map_or_else(|| Ok(()), |n| v.visit_variable_declaration(n))
-        })
+        })?;
+        self.initial_value.as_mut().map_or_else(|| Ok(()), |n| v.visit_expression(n))
     }
 }
 
