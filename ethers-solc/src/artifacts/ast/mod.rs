@@ -937,8 +937,7 @@ ast_node!(
     struct TryCatchClause {
         block: Block,
         error_name: String,
-        #[serde(default)]
-        parameters: Vec<ParameterList>,
+        parameters: ParameterList,
     }
 );
 
@@ -1122,12 +1121,12 @@ mod tests {
                 let input = fs::read_to_string(&path).unwrap();
                 let deserializer = &mut serde_json::Deserializer::from_str(&input);
 
-                let ast: SourceUnit = serde_path_to_error::deserialize(deserializer)
+                let mut ast: SourceUnit = serde_path_to_error::deserialize(deserializer)
                     .expect("Ast deserialization failed");
 
                 let mut visitor = DummyVisitor::default();
 
-                match ast.clone().visit(&mut visitor) {
+                match ast.visit(&mut visitor) {
                     Err(e) => {
                         println!("... {path_str} fail: {e}");
                         panic!();
