@@ -829,7 +829,7 @@ impl Visitable for TryCatchClause {
         V: Visitor<D> + ?Sized,
     {
         v.visit_block(&mut self.block)?;
-        v.visit_parameter_list(&mut self.parameters)
+        self.parameters.as_mut().map_or_else(|| Ok(()), |n| v.visit_parameter_list(n))
     }
 }
 

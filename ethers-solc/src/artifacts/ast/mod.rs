@@ -937,7 +937,7 @@ ast_node!(
     struct TryCatchClause {
         block: Block,
         error_name: String,
-        parameters: ParameterList,
+        parameters: Option<ParameterList>,
     }
 );
 
