@@ -23,10 +23,7 @@ macro_rules! impl_visitor {
 pub trait Visitor<D> {
     fn shared_data(&mut self) -> &D;
 
-    fn visit_source_unit(&mut self, _source_unit: &mut SourceUnit) -> Result<(), VisitError> {
-        Ok(())
-    }
-
+    impl_visitor!(SourceUnit);
     impl_visitor!(PragmaDirective);
     impl_visitor!(ImportDirective);
     impl_visitor!(SourceUnitPart);
@@ -191,7 +188,7 @@ impl Visitable for SourceUnit {
     where
         V: Visitor<D> + ?Sized,
     {
-        v.visit_source_unit(self)?;
+        // v.visit_source_unit(self)?;
         self.nodes.visit(v)
     }
 }
