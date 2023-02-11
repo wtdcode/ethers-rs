@@ -191,7 +191,7 @@ impl Visitable for SourceUnit {
     where
         V: Visitor<D> + ?Sized,
     {
-        // v.visit_source_unit(self)?;
+        v.visit_source_unit(self)?;
         self.nodes.visit(v)
     }
 }
