@@ -1,4 +1,4 @@
-use super::{yul::*, *};
+use super::{lowfidelity::TypedAst, yul::*, *};
 use eyre::Result;
 use thiserror::Error;
 
@@ -183,12 +183,20 @@ where
 }
 
 /// Main entry point of the ast
+impl Visitable for TypedAst {
+    fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
+    where
+        V: Visitor<D> + ?Sized,
+    {
+        v.visit_source_unit(&mut self.source_unit)
+    }
+}
+
 impl Visitable for SourceUnit {
     fn visit<V, D>(&mut self, v: &mut V) -> Result<(), VisitError>
     where
         V: Visitor<D> + ?Sized,
     {
-        // v.visit_source_unit(self)?;
         self.nodes.visit(v)
     }
 }
