@@ -17,7 +17,7 @@ pub mod resolver;
 pub use hh::{HardhatArtifact, HardhatArtifacts};
 pub use resolver::Graph;
 
-mod compile;
+pub mod compile;
 pub use compile::{
     output::{AggregatedCompilerOutput, ProjectCompileOutput},
     *,
