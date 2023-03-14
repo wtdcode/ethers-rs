@@ -1,4 +1,5 @@
 use super::{lowfidelity::TypedAst, yul::*, *};
+use as_any::AsAny;
 use eyre::Result;
 use thiserror::Error;
 
@@ -20,7 +21,7 @@ macro_rules! impl_visitor {
     };
 }
 
-pub trait Visitor<D> {
+pub trait Visitor<D>: AsAny {
     fn shared_data(&mut self) -> &D;
 
     impl_visitor!(SourceUnit);
