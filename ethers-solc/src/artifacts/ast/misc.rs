@@ -4,7 +4,7 @@ use std::{fmt, fmt::Write, str::FromStr};
 /// Represents the source location of a node: `<start byte>:<length>:<source index>`.
 ///
 /// The `start`, `length` and `index` can be -1 which is represented as `None`
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash, Default)]
 pub struct SourceLocation {
     pub start: Option<usize>,
     pub length: Option<usize>,
