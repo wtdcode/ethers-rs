@@ -753,7 +753,7 @@ impl Visitable for IfStatement {
     {
         v.visit_expression(&mut self.condition)?;
         self.false_body.as_mut().map_or_else(|| Ok(()), |n| v.visit_block_or_statement(n))?;
-        self.false_body.as_mut().map_or_else(|| Ok(()), |n| v.visit_block_or_statement(n))
+        v.visit_block_or_statement(&mut self.true_body)
     }
 }
 
