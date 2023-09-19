@@ -101,6 +101,7 @@ default = ["rustls"]
 full = ["async", "svm-solc"]
 
 async = ["tokio/process", "tokio/io-util", "tokio/fs", "tokio/time", "futures-util"]
+skip-checksum = []
 svm-solc = ["svm", "svm-builds", "sha2"]
 
 # Utilities for creating and testing project workspaces

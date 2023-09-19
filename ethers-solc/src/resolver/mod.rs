@@ -817,11 +817,14 @@ impl VersionedSources {
                     solc.solc.display()
                 );
             } else {
-                tracing::trace!("verifying solc checksum for {}", solc.solc.display());
-                if solc.verify_checksum().is_err() {
-                    tracing::trace!("corrupted solc version, redownloading  \"{}\"", version);
-                    Solc::blocking_install(version.as_ref())?;
-                    tracing::trace!("reinstalled solc: \"{}\"", version);
+                #[cfg(not(feature = "skip-checksum"))]
+                {
+                    tracing::trace!("verifying solc checksum for {}", solc.solc.display());
+                    if solc.verify_checksum().is_err() {
+                        tracing::trace!("corrupted solc version, redownloading  \"{}\"", version);
+                        Solc::blocking_install(version.as_ref())?;
+                        tracing::trace!("reinstalled solc: \"{}\"", version);
+                    }
                 }
             }
 
